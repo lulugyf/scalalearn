@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<bean id="bossEventLoopGroup" class="io.netty.channel.nio.NioEventLoopGroup"
+		destroy-method="shutdownGracefully">
+		<constructor-arg type="int" value="${netty.bossCount:0}" />
+	</bean>
+
+	<bean id="workerEventLoopGroup" class="io.netty.channel.nio.NioEventLoopGroup"
+		destroy-method="shutdownGracefully">
+		<constructor-arg type="int" value="${netty.workerCount:0}" />
+	</bean>
+
+	<bean id="eventExecutorGroup" class="io.netty.util.concurrent.DefaultEventExecutorGroup"
+		destroy-method="shutdownGracefully">
+		<constructor-arg type="int" value="${netty.executorCount:500}" />
+	</bean>
+
+	<!-- Netty内部使用的日志记录组件 -->
+	<bean id="loggingHandler" class="io.netty.handler.logging.LoggingHandler">
+		<constructor-arg>
+			<util:constant static-field="io.netty.handler.logging.LogLevel.TRACE" />
+		</constructor-arg>
+	</bean> 
+
+	<!-- Netty底层连接属性设置 -->
+	<util:map id="channelOptions">
+		<entry key-ref="SO_KEEPALIVE" value-type="boolean" value="true" />
+		<entry key-ref="ALLOCATOR">
+			<bean class="io.netty.buffer.PooledByteBufAllocator">
+				<constructor-arg type="boolean" value="true" />
+			</bean>
+		</entry>
+		<entry key-ref="SO_REUSEADDR" value-type="boolean" value="true" />
+		<entry key-ref="TCP_NODELAY" value-type="boolean" value="true" />
+	</util:map>
+
+	<!-- ChannelOption的静态字段引用 -->
+	<util:constant id="SO_BACKLOG"
+		static-field="io.netty.channel.ChannelOption.SO_BACKLOG" />
+	<util:constant id="SO_KEEPALIVE"
+		static-field="io.netty.channel.ChannelOption.SO_KEEPALIVE" />
+	<util:constant id="ALLOCATOR"
+		static-field="io.netty.channel.ChannelOption.ALLOCATOR" />
+	<util:constant id="SO_REUSEADDR"
+		static-field="io.netty.channel.ChannelOption.SO_REUSEADDR" />
+	<util:constant id="TCP_NODELAY"
+		static-field="io.netty.channel.ChannelOption.TCP_NODELAY" />
+
+</beans>

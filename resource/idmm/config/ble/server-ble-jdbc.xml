@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	
+		
+	<bean id="dsPropertiesConf" class="com.sitech.crmpd.idmm.encrypt.PoolSCProperties">
+		<property name="driverClassName" value="${jdbc.cfg.driverClassName}" />
+		<property name="url" value="${jdbc.cfg.url}" />
+		<property name="username" value="${jdbc.cfg.username}" />
+		<property name="password" value="${jdbc.cfg.password}" />
+		<!-- 下面druid 和 dbcp 连接池通用的 -->
+		<!--maxActive: 最大连接数量 -->
+		<property name="maxActive" value="${jdbc.cfg.maxActive}" />
+		<!--initialSize: 初始化连接 -->
+		<property name="initialSize" value="${jdbc.cfg.initialSize}" />
+		<property name="minIdle" value="${jdbc.cfg.initialSize}" />
+		<property name="maxIdle" value="${jdbc.cfg.initialSize}" />
+		<!-- <property name="testOnBorrow" value="true" /> -->
+		<property name="testWhileIdle" value="true" />
+		<property name="validationQuery" value="select 1 from dual" />
+		<property name="logAbandoned" value="true" />
+		<property name="removeAbandoned" value="true" />
+	</bean>
+	<bean id="dsConfig" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+		<constructor-arg ref="dsPropertiesConf" />
+	</bean>
+	
+	<!-- 用于访问配置存储的数据库连接 -->
+
+	<bean id="jdbcConfig" class="org.springframework.jdbc.core.JdbcTemplate"
+		lazy-init="true">
+		<constructor-arg ref="dsConfig" />
+	</bean>
+	
+	<util:map id="cfg_sqls">
+		<entry key="sqlCfgVersion">
+		<value><![CDATA[select config_version from IDMM_VERSION_INFO where version_status='1']]></value>
+		</entry>
+		<entry key="sqlCfgBLEBaseInfo"><value><![CDATA[select ble_id, id_number, addr_ip, addr_port
+			 from BLE_BASE_INFO_{version}
+			 where use_status='1' and ble_id=? and id_number=?]]></value></entry>
+		<entry key="sqlCfgConsumeOrder"><value><![CDATA[
+			select src_topic_id, attribute_key, attribute_value, dest_topic_id,
+				consumer_client_id, consume_seq
+			 from CONSUME_ORDER_INFO_{version}
+			 where use_status='1'
+			 order by src_topic_id, attribute_key, attribute_value, consume_seq
+			 ]]></value></entry>
+			 
+		<entry key="sqlCfgQueryTopics">
+		  <value><![CDATA[select a.ble_id, b.client_id, a.dest_topic_id, b.max_request, b.min_timeout,
+		  	b.max_timeout,b.consume_speed_limit, b.max_messages, b.warn_messages
+				from BLE_DEST_TOPIC_REL_{version} a, TOPIC_SUBSCRIBE_REL_{version} b
+				where a.use_status='1' and b.use_status='1' 
+				and a.dest_topic_id=b.dest_topic_id
+				]]></value></entry>
+		<entry key="sqlCfgQueryNotice"><value><![CDATA[
+			select producer_client_id, src_topic_id, dest_topic_id,
+				 consumer_client_id, notice_topic_id, notice_client_id
+				from CONSUME_NOTICE_INFO_{version}
+				where use_status='1'
+				]]></value></entry>
+	</util:map>
+	
+
+
+
+</beans>

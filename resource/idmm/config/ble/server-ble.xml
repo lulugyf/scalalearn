@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:jolokia="http://www.jolokia.org/jolokia-spring/schema/config"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.jolokia.org/jolokia-spring/schema/config http://www.jolokia.org/jolokia-spring/schema/config/jolokia-config.xsd">
+
+	<!-- 加载变量配置 -->
+	<context:property-placeholder location="classpath:/server-ble-oracle.properties"   />
+	<!-- <context:component-scan base-package="com.sitech.crmpd.idmm2" /> -->
+
+	<context:component-scan base-package="com.sitech.crmpd.idmm.ble" />
+	<context:component-scan base-package="com.sitech.crmpd.idmm.transport" />
+
+
+	<!-- Netty配置 -->
+	<bean id="bootstrapBuilder" class="com.sitech.crmpd.idmm.transport.BootstrapBuilder"
+		lazy-init="true" />
+
+	<alias name="loggingHandler" alias="channelHandler" />
+
+
+	<bean id="socketAddress" class="java.net.InetSocketAddress">
+		<constructor-arg value="${netty.listen.hostname}" />
+		<constructor-arg value="${netty.listen.port}" />
+	</bean>
+
+	<bean id="bossEventLoopGroup" class="io.netty.channel.nio.NioEventLoopGroup"
+		destroy-method="shutdownGracefully">
+		<constructor-arg value="${netty.bossCount}" />
+	</bean>
+
+	<bean id="workerEventLoopGroup" class="io.netty.channel.nio.NioEventLoopGroup"
+		destroy-method="shutdownGracefully">
+		<constructor-arg value="${netty.workerCount}" />
+	</bean>
+
+	<bean id="eventExecutorGroup" class="io.netty.util.concurrent.DefaultEventExecutorGroup"
+		destroy-method="shutdownGracefully">
+		<constructor-arg value="${netty.executorCount}" />
+	</bean>
+
+	<bean id="cachedThreadPool" class="java.util.concurrent.Executors"
+		factory-method="newCachedThreadPool" />
+
+	<bean id="listeningExecutorService" class="com.google.common.util.concurrent.MoreExecutors"
+		factory-method="listeningDecorator" destroy-method="shutdown">
+		<constructor-arg ref="cachedThreadPool" />
+	</bean>
+
+	<bean id="loggingHandler" class="io.netty.handler.logging.LoggingHandler">
+		<constructor-arg>
+			<util:constant static-field="io.netty.handler.logging.LogLevel.TRACE" />
+		</constructor-arg>
+	</bean>
+	<!-- 封包解包的Handler不能@Sharable注解 -->
+	<bean name="frameCodeC" class="com.sitech.crmpd.idmm.transport.FrameCodeC"
+		scope="prototype" />
+
+	<util:map id="bindSocketAddresses">
+		<entry key="/idmm/ble">
+			<ref bean="socketAddress" />
+		</entry>
+	</util:map>
+
+	<!-- 端口与通信框架解包类的映射表 -->
+	<util:map id="bindChildHandlers">
+		<entry key="/idmm/ble">
+			<!-- Netty任务链，用于封包解包等固定操作。会在Worker线程中调用。 -->
+			<!-- 这里配置Bean的名字，程序中使用getBean获取。解决某些Handler不能@Sharable注解的问题 -->
+			<list>
+				<value>loggingHandler</value>
+				<value>frameCodeC</value>
+			</list>
+		</entry>
+	</util:map>
+
+	<!-- 端口与业务逻辑处理类的映射表 -->
+	<util:map id="bindLogicHandlers">
+		<entry key="/idmm/ble">
+			<!-- Netty任务链，用于封包解包等固定操作。会在Worker线程中调用。 -->
+			<!-- 这里配置Bean的名字，程序中使用getBean获取。解决某些Handler不能@Sharable注解的问题 -->
+			<list>
+				<bean class="com.sitech.crmpd.idmm.ble.BLEHandler" />
+			</list>
+		</entry>
+	</util:map>
+
+	<util:constant id="SO_BACKLOG"
+		static-field="io.netty.channel.ChannelOption.SO_BACKLOG" />
+	<util:constant id="SO_KEEPALIVE"
+		static-field="io.netty.channel.ChannelOption.SO_KEEPALIVE" />
+	<util:constant id="ALLOCATOR"
+		static-field="io.netty.channel.ChannelOption.ALLOCATOR" />
+	<util:constant id="SO_REUSEADDR"
+		static-field="io.netty.channel.ChannelOption.SO_REUSEADDR" />
+	<util:constant id="TCP_NODELAY"
+		static-field="io.netty.channel.ChannelOption.TCP_NODELAY" />
+
+	<!-- <bean id="indexRepository" class="com.sitech.crmpd.idmm2.ble.IndexRepositoryImpl" />  -->
+
+	<import resource="classpath:server-ble-jdbc-idx.xml" />
+	<import resource="classpath:server-ble-jdbc.xml" />
+
+	<bean id="messageContextPool" class="org.apache.commons.pool2.impl.GenericKeyedObjectPool">
+		<constructor-arg index="0">
+			<bean
+				class="com.sitech.crmpd.idmm.ble.TopicKeyedPooledMessageContextFactory" />
+		</constructor-arg>
+		<constructor-arg index="1" ref="poolConfig" />
+	</bean>
+
+	<bean id="poolConfig"
+		class="org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig"
+		lazy-init="true">
+		<property name="maxTotal" value="500" />
+		<property name="maxTotalPerKey" value="200" />
+		<property name="testOnBorrow" value="true" />
+		<property name="testWhileIdle" value="true" />
+		<property name="minEvictableIdleTimeMillis" value="60000" />
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		<property name="jmxEnabled" value="false" />
+	</bean>
+
+
+
+	<bean id="exporter" class="org.springframework.jmx.export.MBeanExporter">
+		<!-- <property name="namingStrategy"> <bean class="org.springframework.jmx.export.naming.IdentityNamingStrategy" 
+			/> </property> -->
+		<property name="beans">
+			<map>
+				<entry key="com.sitech.crmpd.idmm.ble.RunTime:name=runTime"
+					value-ref="runTime" />
+			</map>
+		</property>
+	</bean>
+
+	<jolokia:agent lookupConfig="true" systemPropertiesMode="override">
+		<jolokia:config autoStart="true" mimeType="application/json"
+			executor="cached" port="${jmx.jolokiaPort}"  host="0.0.0.0" />
+	</jolokia:agent>
+
+</beans>

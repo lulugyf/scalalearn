@@ -1,0 +1,37 @@
+<html>
+
+<header>
+    <title>IDMM 节点信息</title>
+    <link href="../resource/style.css" rel="stylesheet" type="text/css" />
+</header>
+<body>
+
+
+<h1>&sect; Broker 节点信息：</h1> </br>
+<table><tr>
+    <th >通讯地址 </th><th> JMX地址</th> <th >启动时间</th><th>Heap内存使用</th>
+</tr>
+    <%
+for(b in brkList){
+    %>
+    <tr><td>${b.addr}</td><td>${b.jmx}</td><td>${b.ctime}</td><td>${b.ms}</td></tr>
+    <%
+}
+%>
+</table>
+
+<h1>&sect; BLE 节点信息：</h1> </br>
+<table><tr>
+    <th >BLE-ID </th> <th >通讯地址 </th> <th> JMX地址 </th> <th >启动时间</th><th>Heap内存使用</th>
+</tr>
+    <%
+    for(b in bleList){
+    %>
+    <tr><td>${b.id}</td><td>${b.addr}</td><td>${b.jmx}</td><td>${b.ctime}</td><td>${b.ms}</td></tr>
+    <%
+    }
+    %>
+</table>
+
+</body>
+</html>

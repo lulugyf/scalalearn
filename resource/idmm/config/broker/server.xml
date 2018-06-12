@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+	<!-- 该 BeanPostProcessor 将自动对标注 @Autowired 的 Bean 进行注入 -->
+	<bean
+		class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
+	<!-- 加载变量配置 -->
+	<import resource="classpath:spring-placeholder.xml" />
+	<!-- Netty配置 -->
+	<import resource="classpath:spring-netty.xml" />
+	<!-- Netty任务链配置 -->
+	<import resource="classpath:spring-netty-handler.xml" />
+	<!-- 配置数据配置 -->
+	<import resource="classpath:spring-configuration.xml" />
+	<!-- 存储所需SQL配置 -->
+	<import resource="classpath:spring-sql.xml" />
+	<!-- messageHandler配置 -->
+	<import resource="classpath:spring-messagehandler.xml" />
+	<!-- jdbc配置 -->
+	<import resource="classpath:spring-jdbc.xml" />
+	<!-- ble找不到时入库配置 -->
+	<import resource="classpath:spring-jdbc-ble-not-found.xml" />
+	<import resource="classpath:spring-jmx.xml" />
+	<import resource="classpath:spring-cache.xml" />
+	<!-- metrics配置 -->
+	<import resource="classpath:spring-metrics.xml" />
+	<!-- jolokia -->
+	<import resource="classpath:spring-jolokia.xml" />
+	<context:component-scan base-package="com.sitech.crmpd.idmm.broker" />
+	<context:component-scan base-package="com.sitech.crmpd.idmm.transport" />
+</beans>

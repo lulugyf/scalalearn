@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<util:list id="configurationEntries">
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.BleInfo" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT ble_id as id FROM BLE_BASE_INFO_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.TargetTopic" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT dest_topic_id as id FROM DEST_TOPIC_INFO_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.TopicToBle" />
+			<constructor-arg>
+				<value>
+					<![CDATA[select dest_topic_id as targetTopicId, BLE_id as bleId from BLE_DEST_TOPIC_REL_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.SubscribeRelationship" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT client_id as clientId, dest_topic_id as topicId, max_request as concurrents FROM TOPIC_SUBSCRIBE_REL_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.TopicMapping" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT src_topic_id as sourceTopicId, attribute_key as propertyKey, attribute_value as propertyValue, dest_topic_id as targetTopicId FROM TOPIC_MAPPING_REL_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.ConsumerInOrder" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT src_topic_id as sourceTopicId, attribute_key as propertyKey, attribute_value as propertyValue, dest_topic_id as targetTopicId FROM CONSUME_ORDER_INFO_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.SourceTopic" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT src_topic_id as id FROM SRC_TOPIC_INFO_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.PublishRelationship" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT client_id as clientId, src_topic_id as topicId FROM TOPIC_PUBLISH_REL_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.WhiteListItem" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT ip FROM WHITE_LIST_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.ClientInfo" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT client_id as id, sub_system as belong, client_desc as description FROM CLIENT_BASE_INFO_%s]]>
+				</value>
+			</constructor-arg>
+		</bean>
+		<bean class="com.sitech.crmpd.idmm.broker.config.SQLEntry">
+			<constructor-arg type="java.lang.Class"
+				value="com.sitech.crmpd.idmm.broker.config.ClientLimit" />
+			<constructor-arg>
+				<value>
+					<![CDATA[SELECT client_id as clientId, limit_key as limitKey, limit_value as limitValue FROM CLIENT_LIMIT_INFO_%s WHERE use_status='1']]>
+				</value>
+			</constructor-arg>
+		</bean>
+	</util:list>
+</beans>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" debug="true">
+	<appender name="debugout"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>log/ble.debug</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>log/ble.debug.%d{yyyyMMdd}.gz</fileNamePattern>
+			<maxHistory>60</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<pattern>[%5p]%d{HH:mm:ss.SSS}[%X{id}] -- %m%n</pattern>
+		</encoder>
+	</appender>
+	<logger name="com.sitech.crmpd" level="WARN" />
+	<logger name="org.apache.zookeeper.ClientCnxn" level="ERROR" />
+	<root level="WARN">
+		<appender-ref ref="debugout" />
+	</root>
+</configuration>

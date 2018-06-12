@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+	<!-- <bean id="cacheManager" class="org.springframework.cache.guava.GuavaCacheManager"> 
+		<property name="CacheSpecification"> <value>expireAfterAccess=10m</value> 
+		</property> </bean> -->
+
+	<!-- <bean id="jCacheManager" factory-bean="cachingProvider" factory-method="getCacheManager" 
+		/> <bean id="cachingProvider" class='javax.cache.Caching' factory-method="getCachingProvider" 
+		/> <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" 
+		p:configLocation="classpath:ehcache.xml" /> <bean id="messageCache" class="org.springframework.cache.Cache" 
+		factory-bean="jCacheManager" factory-method="createCache"> <constructor-arg 
+		value='message' /> <constructor-arg> <bean class="org.ehcache.jcache.JCacheConfiguration"> 
+		<constructor-arg> <bean class="javax.cache.configuration.MutableConfiguration" 
+		/> </constructor-arg> </bean> </constructor-arg> </bean> -->
+
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+		p:cache-manager-ref="ehcache" />
+
+	<!-- EhCache library setup -->
+	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerUtils"
+		factory-method="buildCacheManager" />
+
+	<bean id="messageCache" factory-bean="cacheManager"
+		factory-method="getCache">
+		<constructor-arg type="String" value="message" />
+	</bean>
+
+</beans>

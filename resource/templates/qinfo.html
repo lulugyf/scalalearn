@@ -1,0 +1,24 @@
+<html>
+
+<header>
+    <title>IDMM队列信息</title>
+    <link href="../resource/style.css" rel="stylesheet" type="text/css" />
+</header>
+<body>
+<h1>&sect; 队列积压信息：</h1>
+<a href="${uri}?sized=true">只看积压&gt;0的</a> </br>
+
+<table>
+    <tr><th>BLE-ID</th><th>消息主题</th><th>消费者ID</th><th>消息总量</th> <th >积压</th><th>失败</th><th >在途</th><th>状态</th></tr>
+    <tr><th colspan=3><center><b>总 数</b></center></th><td>${all_total}</td><td>${all_size}</td><td>${all_err}</td><td>${all_sending}</td><td> </td></tr>
+
+    <%
+for(q in qList){
+    %>
+    <tr><td>${q.bleid}</td><td>${q.target_topic_id}</td><td>${q.target_client_id}</td><td>${q.total}</td><td>${q.size}</td><td>${q.err}</td><td>${q.sending}</td><td>${q.status}</td></tr>
+    <%
+}
+%>
+</table>
+</body>
+</html>

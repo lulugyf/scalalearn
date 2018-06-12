@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+
+	<bean id="dsProperties" class="com.sitech.crmpd.idmm.encrypt.PoolSCProperties">
+                <property name="driverClassName" value="${jdbc.driverClassName}" />
+                <property name="url" value="${jdbc.url}" />
+                <property name="username" value="${jdbc.username}" />
+                <property name="password" value="${jdbc.password}" />
+                <property name="maxActive" value="${jdbc.maxActive}" />
+                <property name="initialSize" value="${jdbc.initialSize}"/>
+                <property name="testWhileIdle" value="true" />
+                <property name="validationQuery" value="select 1 from dual" />
+                <property name="jmxEnabled" value="true" />
+                <property name="minIdle" value="${jdbc.initialSize}" />
+                <property name="logAbandoned" value="true" />
+                <property name="removeAbandoned" value="true" />
+        </bean>
+        <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"
+                destroy-method="close">
+                <constructor-arg ref="dsProperties" />
+        </bean>
+	<!-- 索引数据操作 -->
+	<bean id="jdbcIndex" class="org.springframework.jdbc.core.JdbcTemplate"
+                lazy-init="true">
+                <constructor-arg ref="dataSource"/>
+                <property name="queryTimeout" value="30"/>
+        </bean>
+
+        <bean id="jmxExporter" class="org.springframework.jmx.export.MBeanExporter" lazy-init="false"
+                depends-on="dataSource">
+                <property name="beans">
+                        <map>
+                                <entry key="bean:name=DataSource" value="#{dataSource.getPool().getJmxPool()}"/>
+                        </map>
+                </property>
+        </bean>
+
+	<util:map id="create_table_sqls">
+		<entry key="sqlCreateIndexTable">
+			<value><![CDATA[CREATE TABLE `msgidx_part_%d` (
+	`idmm_msg_id` CHAR(60) NOT NULL COMMENT 'idmm创建的消息id',
+	`produce_cli_id` char(32) NULL DEFAULT NULL comment '生产者客户端id',
+	`src_topic_id` char(32) NULL DEFAULT NULL comment '原始主题',
+	`dst_cli_id` CHAR(32) NOT NULL COMMENT '消费者客户端id',
+	`dst_topic_id` CHAR(32) NOT NULL COMMENT '目标主题id	',
+	`src_commit_code` CHAR(4) NULL DEFAULT NULL,
+	`group_id` CHAR(32) NULL DEFAULT NULL COMMENT '分组号, 允许为null, 为null时则不以group_id分组及在途消息管理',
+	`priority` INT(11) NOT NULL DEFAULT '100' COMMENT '优先级',
+	`idmm_resend` INT(11) NULL DEFAULT NULL,
+	`consumer_resend` INT(11) NULL DEFAULT NULL COMMENT '消费者重发次数',
+	`create_time` BIGINT(20) NULL DEFAULT NULL COMMENT '生产消息提交时间, 恢复内存时按此字段排序',
+	`broker_id` CHAR(21) NULL DEFAULT NULL COMMENT '消费Broker节点id',
+	`req_time` BIGINT(20) NULL DEFAULT NULL COMMENT '消费请求时间',
+	`commit_code` CHAR(4) NULL DEFAULT NULL COMMENT '消费提交代码',
+	`commit_time` BIGINT(20) NULL DEFAULT NULL COMMENT '费提交时间',
+	`commit_desc` char(160) NULL DEFAULT NULL COMMENT '消费结果描述',
+	`next_topic_id` char(32) null comment '顺序消费的下一个目标主题',
+	`next_client_id` char(32) null comment '顺序消费的下一个消费者， 需要与next_topic_id 一起出现， 并有订阅关系',
+	`expire_time` BIGINT(20) NULL DEFAULT 0 comment '有效时间，unix时间戳记ms, 0为永久有效',
+	UNIQUE INDEX `Index 1` (`idmm_msg_id`, `dst_cli_id`, `dst_topic_id`),
+	INDEX `Index 2` (`dst_cli_id`, `dst_topic_id`)
+	)]]></value>
+		</entry>
+
+		<entry key="sqlCreateIndexTableHis">
+			<value><![CDATA[CREATE TABLE `msgidx_part_his_%d` (
+	`idmm_msg_id` CHAR(60) NOT NULL COMMENT 'idmm创建的消息id',
+	`produce_cli_id` char(32) NULL DEFAULT NULL comment '生产者客户端id',
+	`src_topic_id` char(32) NULL DEFAULT NULL comment '原始主题',
+	`dst_cli_id` CHAR(32) NOT NULL COMMENT '消费者客户端id',
+	`dst_topic_id` CHAR(32) NOT NULL COMMENT '目标主题id	',
+	`src_commit_code` CHAR(4) NULL DEFAULT NULL,
+	`group_id` CHAR(32) NULL DEFAULT NULL COMMENT '分组号, 允许为null, 为null时则不以group_id分组及在途消息管理',
+	`priority` INT(11) NOT NULL DEFAULT '100' COMMENT '优先级',
+	`idmm_resend` INT(11) NULL DEFAULT NULL,
+	`consumer_resend` INT(11) NULL DEFAULT NULL COMMENT '消费者重发次数',
+	`create_time` BIGINT(20) NULL DEFAULT NULL COMMENT '生产消息提交时间, 恢复内存时按此字段排序',
+	`broker_id` CHAR(21) NULL DEFAULT NULL COMMENT '消费Broker节点id',
+	`req_time` BIGINT(20) NULL DEFAULT NULL COMMENT '消费请求时间',
+	`commit_code` CHAR(4) NULL DEFAULT NULL COMMENT '消费提交代码',
+	`commit_time` BIGINT(20) NULL DEFAULT NULL COMMENT '费提交时间',
+	`commit_desc` char(160) NULL DEFAULT NULL COMMENT '消费结果描述',
+	`next_topic_id` char(32) null comment '顺序消费的下一个目标主题',
+	`next_client_id` char(32) null comment '顺序消费的下一个消费者， 需要与next_topic_id 一起出现， 并有订阅关系',
+	`expire_time` BIGINT(20) NULL DEFAULT 0 comment '有效时间，unix时间戳记ms, 0为永久有效',
+	UNIQUE INDEX `Index 1` (`idmm_msg_id`, `dst_cli_id`, `dst_topic_id`),
+	INDEX `Index 2` (`dst_cli_id`, `dst_topic_id`)
+	)]]></value>
+		</entry>
+
+		<entry key="sqlCreateIndexTableErr">
+			<value><![CDATA[CREATE TABLE `msgidx_part_err` (
+	`idmm_msg_id` CHAR(60) NOT NULL COMMENT 'idmm创建的消息id',
+	`produce_cli_id` char(32) NULL DEFAULT NULL comment '生产者客户端id',
+	`src_topic_id` char(32) NULL DEFAULT NULL comment '原始主题',
+	`dst_cli_id` CHAR(32) NOT NULL COMMENT '消费者客户端id',
+	`dst_topic_id` CHAR(32) NOT NULL COMMENT '目标主题id	',
+	`src_commit_code` CHAR(4) NULL DEFAULT NULL,
+	`group_id` CHAR(32) NULL DEFAULT NULL COMMENT '分组号, 允许为null, 为null时则不以group_id分组及在途消息管理',
+	`priority` INT(11) NOT NULL DEFAULT '100' COMMENT '优先级',
+	`idmm_resend` INT(11) NULL DEFAULT NULL,
+	`consumer_resend` INT(11) NULL DEFAULT NULL COMMENT '消费者重发次数',
+	`create_time` BIGINT(20) NULL DEFAULT NULL COMMENT '生产消息提交时间, 恢复内存时按此字段排序',
+	`broker_id` CHAR(21) NULL DEFAULT NULL COMMENT '消费Broker节点id',
+	`req_time` BIGINT(20) NULL DEFAULT NULL COMMENT '消费请求时间',
+	`commit_code` CHAR(4) NULL DEFAULT NULL COMMENT '消费提交代码',
+	`commit_time` BIGINT(20) NULL DEFAULT NULL COMMENT '费提交时间',
+	`commit_desc` char(160) NULL DEFAULT NULL COMMENT '消费结果描述',
+	`next_topic_id` char(32) null comment '顺序消费的下一个目标主题',
+	`next_client_id` char(32) null comment '顺序消费的下一个消费者， 需要与next_topic_id 一起出现， 并有订阅关系',
+	`expire_time` BIGINT(20) NULL DEFAULT 0 comment '有效时间，unix时间戳记ms, 0为永久有效',
+	UNIQUE INDEX `Index 1` (`idmm_msg_id`, `dst_cli_id`, `dst_topic_id`),
+	INDEX `Index 2` (`dst_cli_id`, `dst_topic_id`)
+	)]]></value>
+		</entry>
+		
+		<entry key="ble_not_found">
+		<value><![CDATA[CREATE TABLE `ble_not_found` (
+  `msg_id` varchar(128) NOT NULL,
+  `dest_topic_id` char(32) NOT NULL,
+  `properties` varchar(4096) NOT NULL,
+  `op_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`msg_id`,`dest_topic_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8]]></value>
+		</entry>
+
+	</util:map>
+
+	<util:map id="idx_op_sqls">
+		<entry key="sqlInsertHis">
+			<value><![CDATA[insert into msgidx_part_his_%d(idmm_msg_id, dst_cli_id, dst_topic_id, group_id, priority, 
+			consumer_resend, create_time, broker_id, req_time, commit_code, 
+			commit_time, next_topic_id, next_client_id, produce_cli_id, src_topic_id,
+			commit_desc, expire_time)
+			
+			 select idmm_msg_id, dst_cli_id, dst_topic_id, group_id, priority, 
+			consumer_resend, create_time, broker_id, req_time, commit_code, 
+			?, next_topic_id, next_client_id, produce_cli_id, src_topic_id,
+			commit_desc, expire_time
+		from msgidx_part_%d where idmm_msg_id=? and dst_cli_id=? and dst_topic_id=? and create_time=?
+		]]></value>
+		</entry>
+
+		<entry key="sqlInsertErr">
+			<value><![CDATA[
+			insert into msgidx_part_err(idmm_msg_id, dst_cli_id, dst_topic_id, group_id, priority,
+			consumer_resend, create_time, broker_id, req_time, commit_code,
+			commit_time, next_topic_id, next_client_id, produce_cli_id, src_topic_id,
+			 commit_desc)
+			 values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		]]></value>
+		</entry>
+
+		<entry key="sqlQueryIndex">
+			<value><![CDATA[select idmm_msg_id, dst_cli_id, dst_topic_id, group_id, priority, 
+			consumer_resend, create_time, broker_id, req_time, commit_code, 
+			commit_time, next_topic_id, next_client_id, produce_cli_id, src_topic_id,
+			commit_desc
+		from msgidx_part_%d where dst_cli_id=? and dst_topic_id=? and commit_time=0
+		]]></value>
+		</entry>
+
+		<entry key="sqlInsertIndex">
+			<value><![CDATA[insert into msgidx_part_%d(idmm_msg_id, dst_cli_id, dst_topic_id, group_id, priority, 
+			consumer_resend, create_time, broker_id, req_time, commit_code, 
+			commit_time, next_topic_id, next_client_id, produce_cli_id, src_topic_id,
+			 commit_desc)
+			 values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]]></value>
+		</entry>
+
+		<entry key="sqlUpdateIndex">
+			<value><![CDATA[update msgidx_part_%d set req_time=?, consumer_resend=?, broker_id=?
+			 where idmm_msg_id=? and dst_cli_id=? and dst_topic_id=? and create_time=?]]></value>
+		</entry>
+
+		<entry key="sqlRollbackIndex">
+			<value><![CDATA[update msgidx_part_%d set req_time=?
+			 where idmm_msg_id=? and dst_cli_id=? and dst_topic_id=? and create_time=?]]></value>
+		</entry>
+
+		<entry key="sqlUnlockIndex">
+			<value><![CDATA[update msgidx_part_%d set req_time=0
+			 where idmm_msg_id=? and dst_cli_id=? and dst_topic_id=? and create_time=?]]></value>
+		</entry>
+		<entry key="sqlInsertHisAll">
+			<value><![CDATA[insert into msgidx_part_his_%d(idmm_msg_id, dst_cli_id, dst_topic_id, group_id, priority, 
+			consumer_resend, create_time, broker_id, req_time, commit_code, 
+			commit_time, next_topic_id, next_client_id, produce_cli_id, src_topic_id,
+			 commit_desc, expire_time)
+			
+			 select idmm_msg_id, dst_cli_id, dst_topic_id, group_id, priority, 
+			consumer_resend, create_time, broker_id, req_time, commit_code, 
+			commit_time, next_topic_id, next_client_id, produce_cli_id, src_topic_id,
+			 commit_desc, expire_time
+		from msgidx_part_%d where dst_cli_id=? and dst_topic_id=?
+		]]></value>
+		</entry>
+
+		<entry key="sqlDelIndexAll">
+			<value><![CDATA[delete from msgidx_part_%d where 
+					dst_cli_id=? and dst_topic_id=?]]></value>
+		</entry>
+		
+		<entry key="sqlDelIndex">
+			<value><![CDATA[delete from msgidx_part_%d where 
+					idmm_msg_id=? and dst_cli_id=? and dst_topic_id=? and create_time=?]]></value>
+		</entry>
+		
+		<entry key="sqlUpdateCommitTime">
+		<value><![CDATA[update msgidx_part_%d set commit_time=? where 
+					idmm_msg_id=? and dst_cli_id=? and dst_topic_id=? and create_time=?]]></value>
+		</entry>
+
+		<entry key="sqlQryBleNotFound">
+		<value><![CDATA[select msg_id, dest_topic_id, properties, op_time from ble_not_found
+					where dest_topic_id=?]]></value>
+		</entry>
+		<entry key="sqlDelBleNotFound">
+		<value><![CDATA[delete from ble_not_found where dest_topic_id=?]]></value>
+		</entry>
+
+	</util:map>
+
+
+
+
+	<!-- <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"> 
+		<property name="dataSource" ref="dataSource" /> </bean> <tx:annotation-driven 
+		transaction-manager="txManager" /> -->
+
+</beans>

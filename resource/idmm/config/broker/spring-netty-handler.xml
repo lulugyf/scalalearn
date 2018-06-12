@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<!-- 封包解包的Handler不能@Sharable注解 -->
+	<bean name="frameCodeC" class="com.sitech.crmpd.idmm.transport.FrameCodeC"
+		scope="prototype" />
+	<bean name="httpServerCodec" class="io.netty.handler.codec.http.HttpServerCodec"
+		scope="prototype" />
+	<bean name="httpObjectAggregator" class="io.netty.handler.codec.http.HttpObjectAggregator"
+		scope="prototype">
+		<constructor-arg value="1048576" />
+	</bean>
+	
+	<!-- IP黑名单设置，逐行完全匹配
+	<bean id="ipFilters" class="ReloadableFileLines" >
+		<constructor-arg value="classpath:ipblacklist.txt" />
+	</bean> -->
+	
+	<!-- 权限
+	<bean id="authorization" class="ReloadableResourceBundle" >
+		<constructor-arg value="authorization" />
+	</bean> -->
+
+	<bean id="socketAddress" class="java.net.InetSocketAddress">
+		<constructor-arg type="String" value="${netty.listen.hostname}" />
+		<constructor-arg type="int" value="${netty.listen.port:0}" />
+	</bean>
+
+	<bean id="httpSocketAddress" class="java.net.InetSocketAddress">
+		<constructor-arg type="String" value="${netty.listen.hostname}" />
+		<constructor-arg type="int" value="${netty.http.listen.port:0}" />
+	</bean>
+	<bean id="logicHandler" class="com.sitech.crmpd.idmm.broker.LogicHandler" />
+	<bean id="httpLogicHandler" class="com.sitech.crmpd.idmm.broker.HttpLogicHandler" />
+
+	<bean id="configConstantZookeeperBrokerPath" class="java.lang.String">
+		<constructor-arg type="String"
+			value="${configConstant.zookeeper.brokerPath:/idmm/broker}" />
+	</bean>
+
+	<bean id="configConstantZookeeperHttpBrokerPath" class="java.lang.String">
+		<constructor-arg type="String"
+			value="${configConstant.zookeeper.httpBrokerPath:/idmm/httpbroker}" />
+	</bean>
+
+	<util:map id="bindSocketAddresses">
+		<entry key-ref="configConstantZookeeperBrokerPath" value-ref="socketAddress" />
+		<entry key-ref="configConstantZookeeperHttpBrokerPath" value-ref="httpSocketAddress" />
+	</util:map>
+
+	<!-- 端口与通信框架解包类的映射表 -->
+	<util:map id="bindChildHandlers">
+		<entry key-ref="configConstantZookeeperBrokerPath">
+			<!-- Netty任务链，用于封包解包等固定操作。会在Worker线程中调用。 -->
+			<!-- 这里配置Bean的名字，程序中使用getBean获取。解决某些Handler不能@Sharable注解的问题 -->
+			<list>
+				<value>loggingHandler</value>
+				<value>frameCodeC</value>
+			</list>
+		</entry>
+		<entry key-ref="configConstantZookeeperHttpBrokerPath">
+			<!-- Netty任务链，用于封包解包等固定操作。会在Worker线程中调用。 -->
+			<!-- 这里配置Bean的名字，程序中使用getBean获取。解决某些Handler不能@Sharable注解的问题 -->
+			<list>
+				<value>loggingHandler</value>
+				<value>httpServerCodec</value>
+				<value>httpObjectAggregator</value>
+			</list>
+		</entry>
+	</util:map>
+
+	<!-- 端口与业务逻辑处理类的映射表 -->
+	<util:map id="bindLogicHandlers">
+		<entry key-ref="configConstantZookeeperBrokerPath">
+			<!-- Netty任务链，用于封包解包等固定操作。会在Worker线程中调用。 -->
+			<!-- 这里配置Bean的名字，程序中使用getBean获取。解决某些Handler不能@Sharable注解的问题 -->
+			<list>
+				<ref bean="logicHandler" />
+			</list>
+		</entry>
+		<entry key-ref="configConstantZookeeperHttpBrokerPath">
+			<!-- Netty任务链，用于封包解包等固定操作。会在Worker线程中调用。 -->
+			<!-- 这里配置Bean的名字，程序中使用getBean获取。解决某些Handler不能@Sharable注解的问题 -->
+			<list>
+				<ref bean="httpLogicHandler" />
+			</list>
+		</entry>
+	</util:map>
+
+</beans>

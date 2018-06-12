@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jolokia="http://www.jolokia.org/jolokia-spring/schema/config"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.jolokia.org/jolokia-spring/schema/config http://www.jolokia.org/jolokia-spring/schema/config/jolokia-config.xsd">
+	<jolokia:agent lookupConfig="true" systemPropertiesMode="override">
+		<jolokia:config autoStart="true" mimeType="application/json"
+			host="0.0.0.0" port="${jolokia.port:0}" executor="cached" />
+	</jolokia:agent>
+</beans>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+	
+	<!-- 消息id中的序列，Broker唯一 -->
+	<bean id="messageIdSequence" class="java.util.concurrent.atomic.AtomicLong" />
+	<!-- 交易序列，Broker唯一 -->
+	<bean id="uuid" class="java.util.concurrent.atomic.AtomicLong" />
+	<!-- 消息ID生成实现 -->
+	<bean id="messageIdGenerator"
+		class="com.sitech.crmpd.idmm.broker.message.DefaultMessageIdGenerator" />
+	<!-- 端到端日志实现 -->
+	<bean id="E2eLogger"
+		  class="com.sitech.crmpd.idmm.broker.e2e.HljmobLoggerHandler" />
+
+	<bean id="cachedThreadPool" class="java.util.concurrent.Executors"
+		factory-method="newCachedThreadPool" />
+	<!-- 异步处理消费结果回送任务的线程池 -->
+	<alias name="cachedThreadPool" alias="asyncTaskExecutor" />
+
+	<bean id="listeningExecutorService" class="com.google.common.util.concurrent.MoreExecutors"
+		factory-method="listeningDecorator" destroy-method="shutdown">
+		<constructor-arg ref="cachedThreadPool" />
+	</bean>
+
+	<bean class="org.apache.commons.pool2.impl.GenericKeyedObjectPool">
+		<constructor-arg index="0">
+			<bean
+				class="com.sitech.crmpd.idmm.broker.pool.TopicKeyedPooledMessageContextFactory" />
+		</constructor-arg>
+		<constructor-arg index="1">
+			<bean class="org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig"
+				lazy-init="true">
+				<property name="maxTotal" value="500" />
+				<property name="maxTotalPerKey" value="200" />
+				<property name="maxIdlePerKey" value="200" />
+				<property name="testOnBorrow" value="true" />
+				<property name="minEvictableIdleTimeMillis" value="60000" />
+				<property name="timeBetweenEvictionRunsMillis" value="60000" />
+				<property name="jmxEnabled" value="false" />
+			</bean>
+		</constructor-arg>
+	</bean>
+
+</beans>

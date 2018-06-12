@@ -1,0 +1,20 @@
+<html>
+
+<header>
+    <title>IDMM checker</title>
+    <link href="../resource/style.css" rel="stylesheet" type="text/css" />
+</header>
+<body>
+<h1>${from_here}</h1>
+
+<ul>
+<%
+for(e in entList){
+    %>
+    <li><a href="${e.path}"> ${e.desc} </a>  </li> <br />
+    <%
+}
+%>
+</ul>
+</body>
+</html>

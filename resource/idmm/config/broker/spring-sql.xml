@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<!-- 兼容性处理，不同的存储实现提供不同的SQL及Bean -->
+	<bean id="jdbcInsertMessageSQL" class="java.lang.String">
+		<constructor-arg>
+			<value><![CDATA[insert into messagestore_%s (id, properties, systemProperties, content, createtime) values (:id, :properties, :systemProperties, :content, :createTime)]]></value>
+		</constructor-arg>
+	</bean>
+	<bean id="jdbcQueryMessageSQL" class="java.lang.String">
+		<constructor-arg>
+			<value><![CDATA[select id, properties, systemProperties, content from messagestore_%s where id = :id]]></value>
+		</constructor-arg>
+	</bean>
+
+	<util:map id="tableInitSQLs">
+		<entry key="messagestore_%s">
+			<value><![CDATA[CREATE TABLE messagestore_%s (
+  id varchar(128) NOT NULL,
+  properties varchar(2048) DEFAULT NULL,
+  systemProperties varchar(1024) DEFAULT NULL,
+  content blob,
+  createtime bigint(20),
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+			]]></value>
+		</entry>
+
+		<entry key="message_notfound">
+			<value><![CDATA[CREATE TABLE message_notfound (
+  id varchar(128) NOT NULL,
+  found_time bigint(20) default 0,
+  next_scan_time bigint(20) default 0 comment '下次扫描时间',
+  scan_retries int default 0,
+  PRIMARY KEY (id),
+  KEY index1 (next_scan_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+			]]></value>
+		</entry>
+
+		<entry key="message_notfound_his">
+			<value><![CDATA[CREATE TABLE message_notfound_his (
+  id varchar(128) NOT NULL,
+  found_time bigint(20) default 0,
+  next_scan_time bigint(20) default 0 comment '下次扫描时间',
+  scan_retries int default 0,
+  PRIMARY KEY (id),
+  KEY index1 (next_scan_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+			]]></value>
+		</entry>
+
+		<entry key="msgidx_part_%s">
+			<value><![CDATA[CREATE TABLE `msgidx_part_%s` (
+  `idmm_msg_id` varchar(60) NOT NULL COMMENT 'idmm创建的消息id',
+  `produce_cli_id` varchar(32) DEFAULT NULL,
+  `src_topic_id` varchar(32) DEFAULT NULL,
+  `dst_cli_id` varchar(32) DEFAULT NULL,
+  `dst_topic_id` varchar(32) DEFAULT NULL,
+  `src_commit_code` char(4) DEFAULT NULL,
+  `group_id` varchar(32) DEFAULT NULL COMMENT '分组号, 允许为null, 为null时则不以group_id分组及在途消息管理',
+  `priority` int(11) NOT NULL DEFAULT '100' COMMENT '优先级',
+  `idmm_resend` int(11) DEFAULT NULL,
+  `consumer_resend` int(11) DEFAULT NULL COMMENT '消费者重发次数',
+  `create_time` bigint(20) DEFAULT NULL COMMENT '生产消息提交时间, 恢复内存时按此字段排序',
+  `broker_id` varchar(21) DEFAULT NULL COMMENT '消费Broker节点id，存储Broker的ip与地址',
+  `req_time` bigint(20) DEFAULT NULL COMMENT '消费请求时间',
+  `commit_code` char(4) DEFAULT NULL COMMENT '消费提交代码',
+  `commit_time` bigint(20) DEFAULT NULL COMMENT '费提交时间',
+  `commit_desc` varchar(160) DEFAULT NULL COMMENT '消费结果描述',
+  `next_topic_id` varchar(32) DEFAULT NULL COMMENT '顺序消费的下一个目标主题',
+  `next_client_id` varchar(32) DEFAULT NULL COMMENT '顺序消费的下一个消费者， 需要与next_topic_id 一起出现， 并有订阅关系',
+  PRIMARY KEY (`idmm_msg_id`,`dst_cli_id`,`dst_topic_id`),
+  KEY `Index 1` (`dst_cli_id`,`dst_topic_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+			]]></value>
+		</entry>
+		<entry key="msgidx_part_his_%s">
+			<value><![CDATA[CREATE TABLE `msgidx_part_his_%s` (
+  `idmm_msg_id` varchar(60) NOT NULL COMMENT 'idmm创建的消息id',
+  `produce_cli_id` varchar(32) DEFAULT NULL,
+  `src_topic_id` varchar(32) DEFAULT NULL,
+  `dst_cli_id` varchar(32) DEFAULT NULL,
+  `dst_topic_id` varchar(32) DEFAULT NULL,
+  `src_commit_code` char(4) DEFAULT NULL,
+  `group_id` varchar(32) DEFAULT NULL COMMENT '分组号, 允许为null, 为null时则不以group_id分组及在途消息管理',
+  `priority` int(11) NOT NULL DEFAULT '100' COMMENT '优先级',
+  `idmm_resend` int(11) DEFAULT NULL,
+  `consumer_resend` int(11) DEFAULT NULL COMMENT '消费者重发次数',
+  `create_time` bigint(20) DEFAULT NULL COMMENT '生产消息提交时间, 恢复内存时按此字段排序',
+  `broker_id` varchar(21) DEFAULT NULL COMMENT '消费Broker节点id，存储Broker的ip与地址',
+  `req_time` bigint(20) DEFAULT NULL COMMENT '消费请求时间',
+  `commit_code` char(4) DEFAULT NULL COMMENT '消费提交代码',
+  `commit_time` bigint(20) DEFAULT NULL COMMENT '费提交时间',
+  `commit_desc` varchar(160) DEFAULT NULL COMMENT '消费结果描述',
+  `next_topic_id` varchar(32) DEFAULT NULL COMMENT '顺序消费的下一个目标主题',
+  `next_client_id` varchar(32) DEFAULT NULL COMMENT '顺序消费的下一个消费者， 需要与next_topic_id 一起出现， 并有订阅关系',
+  KEY `Index 1` (`dst_cli_id`,`dst_topic_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+			]]></value>
+		</entry>
+		<entry key="msgidx_part_err">
+			<value><![CDATA[CREATE TABLE `msgidx_part_err` (
+  `idmm_msg_id` varchar(60) NOT NULL COMMENT 'idmm创建的消息id',
+  `produce_cli_id` varchar(32) DEFAULT NULL,
+  `src_topic_id` varchar(32) DEFAULT NULL,
+  `dst_cli_id` varchar(32) DEFAULT NULL,
+  `dst_topic_id` varchar(32) DEFAULT NULL,
+  `src_commit_code` char(4) DEFAULT NULL,
+  `group_id` varchar(32) DEFAULT NULL COMMENT '分组号, 允许为null, 为null时则不以group_id分组及在途消息管理',
+  `priority` int(11) NOT NULL DEFAULT '100' COMMENT '优先级',
+  `idmm_resend` int(11) DEFAULT NULL,
+  `consumer_resend` int(11) DEFAULT NULL COMMENT '消费者重发次数',
+  `create_time` bigint(20) DEFAULT NULL COMMENT '生产消息提交时间, 恢复内存时按此字段排序',
+  `broker_id` varchar(21) DEFAULT NULL COMMENT '消费Broker节点id，存储Broker的ip与地址',
+  `req_time` bigint(20) DEFAULT NULL COMMENT '消费请求时间',
+  `commit_code` char(4) DEFAULT NULL COMMENT '消费提交代码',
+  `commit_time` bigint(20) DEFAULT NULL COMMENT '费提交时间',
+  `commit_desc` varchar(160) DEFAULT NULL COMMENT '消费结果描述',
+  `next_topic_id` varchar(32) DEFAULT NULL COMMENT '顺序消费的下一个目标主题',
+  `next_client_id` varchar(32) DEFAULT NULL COMMENT '顺序消费的下一个消费者， 需要与next_topic_id 一起出现， 并有订阅关系',
+  PRIMARY KEY (`idmm_msg_id`,`dst_cli_id`,`dst_topic_id`),
+  KEY `Index 1` (`dst_cli_id`,`dst_topic_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+			]]></value>
+		</entry>
+	</util:map>
+	<util:map id="tableIndexMaxs">
+		<entry key="messagestore_%s" value-type="int" value="0" />
+		<entry key="msgidx_part_%s" value-type="int" value="0" />
+		<entry key="msgidx_part_his_%s" value-type="int" value="0" />
+	</util:map>
+
+	<bean id="cassandraInsertMessageSQL" class="java.lang.String">
+		<constructor-arg>
+			<value><![CDATA[insert into messagestore (id, properties, systemProperties, content) values (?, ?, ?, ?)]]></value>
+		</constructor-arg>
+	</bean>
+	<bean id="cassandraQueryMessageSQL" class="java.lang.String">
+		<constructor-arg>
+			<value><![CDATA[select id, properties, systemProperties, content from messagestore where id = '%s']]></value>
+		</constructor-arg>
+	</bean>
+
+	<!-- 下面这部分sql是用于消息体找不到的处理过程， 报错找不到 findOne, 则插入message_notfound -->
+	<bean id="jdbcInsertMessageNotFoundSQL" class="java.lang.String">
+		<constructor-arg>
+			<value><![CDATA[insert into message_notfound (id, found_time, next_scan_time, scan_retries)	values(:id, :foundTime, :nextScanTime, :scanRetries) ]]></value>
+		</constructor-arg>
+	</bean>
+	
+	<!-- 延迟消息 -->
+	<bean id="jdbcInsertDelayMessageSQL" class="java.lang.String">
+		<constructor-arg>
+			<value><![CDATA[insert into timing_message (idmm_msg_id, create_time, req_time, status)	values(:id, :currentTimeMillis, :effectiveTime, 0) ]]></value>
+		</constructor-arg>
+	</bean>
+	<bean id="cassandraInsertDelayMessageSQL" class="java.lang.String">
+		<constructor-arg>
+			<value><![CDATA[insert into timing_message (idmm_msg_id, create_time, req_time, status)	values(?, ?, ?, 0) ]]></value>
+		</constructor-arg>
+	</bean>
+
+
+</beans>
