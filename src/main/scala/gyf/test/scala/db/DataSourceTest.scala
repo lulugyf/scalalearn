@@ -43,7 +43,7 @@ object DataSourceTest {
       }
     }
 
-    Await.result(Future.sequence(futs), 10 minutes)
+    Await.result(Future.sequence(futs), 10.minutes)
     val t2 = System.currentTimeMillis()
     closeDS(ds)
     println(s"time: ${t2-t1}")

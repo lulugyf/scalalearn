@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+	 http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+	 ">
+
+	<!-- 加载变量配置 -->
+	<context:property-placeholder location="classpath:/jettyweb_spring_si.properties"   />
+	<!-- <context:component-scan base-package="com.sitech.crmpd.idmm2" /> -->
+
+	<context:component-scan base-package="gyf.test.scala" />
+
+	<bean id="decryptor" class="gyf.test.scala.db.PassDecryptorImpl" />
+
+	<bean id="dsProperties" class="org.apache.tomcat.jdbc.pool.PoolProperties">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" ref="dbPass" />
+		<property name="maxActive" value="${jdbc.maxActive}" />
+		<property name="initialSize" value="${jdbc.initialSize}" />
+		<property name="testWhileIdle" value="true" />
+		<property name="validationQuery" value="select 1 from dual" />
+		<property name="jmxEnabled" value="true" />
+		<property name="minIdle" value="${jdbc.initialSize}" />
+		<property name="logAbandoned" value="true" />
+		<property name="removeAbandoned" value="true" />
+	</bean>
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+		<constructor-arg ref="dsProperties" />
+	</bean>
+
+	<util:list id="handlers">
+        <bean class="gyf.test.scala.handlers.NodeInfoHandler">
+            <property name="contextPath" value="/nodeinfo" />
+            <property name="contextDesc" value="查询 IDMM 节点信息" />
+        </bean>
+        <bean class="gyf.test.scala.handlers.QueueInfoHandler">
+            <property name="contextPath" value="/qinfo" />
+            <property name="contextDesc" value="消息队列概况" />
+        </bean>
+        <bean class="gyf.test.scala.handlers.QryIDHandler">
+            <property name="contextPath" value="/qryid" />
+            <property name="contextDesc" value="根据消息ID查询消息情况" />
+        </bean>
+		<bean class="gyf.test.scala.handlers.HostInfoHandler">
+			<property name="contextPath" value="/hosts" />
+			<property name="contextDesc" value="主机情况" />
+		</bean>
+		<bean class="gyf.test.scala.handlers.ProcessHandler">
+			<property name="contextPath" value="/processes" />
+			<property name="contextDesc" value="应用进程情况" />
+		</bean>
+	</util:list>
+
+</beans>

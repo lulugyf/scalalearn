@@ -110,7 +110,7 @@ object ClearTable {
         qinfo(ble.jmx, ble.id)
       }
     }
-    val rets = Await.result(Future.sequence(lst.toSeq),  5 minutes)
+    val rets = Await.result(Future.sequence(lst.toSeq),  5.minutes)
     zk.close
     ec.threadPool.shutdownNow()
 
@@ -185,7 +185,7 @@ object ClearTable {
       }}
     )
 
-    Await.result(Future.sequence(futs1 ++ futs2 ++ futs3), 10 minutes)
+    Await.result(Future.sequence(futs1 ++ futs2 ++ futs3), 10.minutes)
 
 
     ds.close(true)

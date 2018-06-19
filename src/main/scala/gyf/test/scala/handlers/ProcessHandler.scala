@@ -135,7 +135,7 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
                        |cwd=`ls -l /proc/$$pid/cwd|awk '{print $$NF}'`;
                        |jmxport=`grep jmx.jolokiaPort $$cwd/config/ble/*.properties|awk -F "=" '{print $$NF}'`;
                        |listenport=`grep netty.listen.port $$cwd/config/ble/*.properties|awk -F "=" '{print $$NF}'`;
-                       |echo "#%CWD: $$pid $$jmxport $$cwd $$class $$listenport";
+                       |echo "#%CWD: $$pid $$cwd $$class $$jmxport $$listenport";
                        |echo "#%LSOF:"; ${lsof} -p $$pid -P|grep TCP|awk '{print $$(NF-1), $$NF}';
                        |echo "#%MEM:"; curl "http://localhost:$$jmxport/jolokia/read/java.lang:type=Memory" 2>/dev/null; echo "";
                        |echo "#%DATASOURCE:"; curl "http://localhost:$$jmxport/jolokia/exec/com.sitech.crmpd.idmm:name=dsMon/dsinfo" 2>/dev/null; echo "";
@@ -144,7 +144,7 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
                           |cwd=`ls -l /proc/$$pid/cwd|awk '{print $$NF}'`;
                           |jmxport=`grep jolokia.port $$cwd/config/broker/*.properties|awk -F "=" '{print $$NF}'`;
                           |listenport=`grep netty.listen.port $$cwd/config/broker/*.properties|awk -F "=" '{print $$NF}'`;
-                          |echo "#%CWD: $$pid $$jmxport $$cwd $$class $$listenport";
+                          |echo "#%CWD: $$pid $$cwd $$class $$jmxport $$listenport";
                           |echo "#%LSOF:"; ${lsof} -p $$pid -P|grep TCP|awk '{print $$(NF-1), $$NF}';
                           |echo "#%MEM:"; curl "http://localhost:$$jmxport/jolokia/read/java.lang:type=Memory" 2>/dev/null; echo "";
                           |echo "#%DATASOURCE:"; curl "http://localhost:$$jmxport/jolokia/exec/com.sitech.crmpd.idmm:name=dsMon/dsinfo" 2>/dev/null; echo "";
@@ -168,9 +168,12 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
                 val v = cvalue.split(" +")
                 pi.pid = v(0)
                 pi.jmxport=v(1)
-                pi.cwd = v(2)
-                pi.args = v(3)
-                pi.listenport=v(4)
+                pi.cwd = v(1)
+                pi.args = v(2)
+                if(v.length > 3)
+                  pi.jmxport = v(3)
+                if(v.length > 4)
+                  pi.listenport=v(4)
               case "MEM" =>
                 try {
                   implicit val formats = DefaultFormats
