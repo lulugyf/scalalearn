@@ -107,7 +107,9 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
     val ip = s(3).trim
     var session: Session = null
     try{
-      session = createSession(s"${user}@${host}", keyFile)
+      val host_str = s"${user}@${host}"
+//      println(s"host_str: [${host_str}]")
+      session = createSession(host_str, keyFile)
 
       val tbls = (setBLEId(get_process_one(session, "ble"), blelist, ip) ++ get_process_one(session, "broker"))
         .filter(_.pid != "").map{ p =>
@@ -213,7 +215,7 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
     val listent_ports = lines.filter(_.indexOf("LISTEN") > 0).map{ s =>
       s.split("[: ]")(1)
     }
-    println(s"listen ports ${listent_ports.mkString(",")}")
+    //println(s"listen ports ${listent_ports.mkString(",")}")
     import scala.collection.mutable
     val income = new mutable.HashMap[String, Int]()
     val outgoing = new mutable.HashMap[String, Int]()
@@ -250,11 +252,12 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
     var conns_detail = ""
     var bleid = ""
     def tblHeader(): String = {
-      <tr><th>PID</th><th>args</th><th>bleid</th><th>cwd</th><th>start_time</th><th>jmxport</th><th>listenport</th><th>mem(used/max)</th><th>dataSource<br/>(active/idle/max)</th><th>conns</th></tr>.toString
+      <tr><th>PID</th><th>args</th><th>bleid</th><th>cwd</th><th>start_time</th><th>jmxport</th><th>listenport</th><th>mem(used/max)</th>
+        <th>dataSource<br/>(active/idle/max)</th><th>conns</th></tr>.toString
     }
     def toTable(): String = {
       <tr><td>{pid}</td><td>{args}</td><td>{bleid}</td><td>{cwd}</td><td>{start_time}</td><td>{jmxport}</td><td>{listenport}</td>
-        <td><pre>{mem}</pre></td><td><pre>{dataSource}</pre></td><td><pre>{conns}</pre></td></tr>.toString
+        <td><pre>{mem}</pre></td><td><pre>{dataSource}</pre></td><td><div class="tooltip">{conns}<span class="tooltiptext"><pre>{conns_detail}</pre></span></div></td></tr>.toString
     }
   }
   case class MemUsage(init: Long, committed: Long, max: Long, used: Long){

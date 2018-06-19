@@ -1,6 +1,8 @@
 package gyf.test.scala.utils
 
 import java.io._
+import java.util.concurrent.LinkedTransferQueue
+import java.util.concurrent.atomic.AtomicInteger
 
 import com.jcraft.jsch._
 import org.json4s.{DefaultFormats, JObject}
@@ -379,6 +381,11 @@ object RemoteSSH {
       }
     }
     (bout.toString, bout_e.toString)
+  }
+
+  def test_nothing(): Unit = {
+    val a = new AtomicInteger()
+    val b = new LinkedTransferQueue[Long]()
   }
 
   /* 交互式的 shell */

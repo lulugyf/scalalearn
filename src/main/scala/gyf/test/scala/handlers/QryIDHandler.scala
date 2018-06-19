@@ -58,6 +58,8 @@ class QryIDHandler extends AbstractHandler with ContextPathTrait{
           s"""select idmm_msg_id, dst_cli_id,dst_topic_id, create_time, commit_time-create_time,
         consumer_resend from msgidx_part_${tbl_suffix_idx} where idmm_msg_id=?""", id), MsgIdx1.apply _).map { mi =>
           out.println(mi.id, mi.cli, mi.topic, mi.create_time, mi.consume_time, mi.retry)
+          out.println(s"<br />创建时间: ${new java.util.Date(mi.create_time).toString}")
+          out.println(s"<br />消费提交时间: ${new java.util.Date(mi.create_time+mi.consume_time).toString}")
         }
 
         out.println("<p/> ----error:<br />")
@@ -66,6 +68,7 @@ class QryIDHandler extends AbstractHandler with ContextPathTrait{
           MsgIdx1.apply _)
           .map { mi =>
             out.println(mi.id, mi.cli, mi.topic, mi.create_time, mi.retry)
+            out.println(s"<br />创建时间: ${new java.util.Date(mi.create_time).toString}")
           }
 
         out.println("<p/> ----body:<br />")

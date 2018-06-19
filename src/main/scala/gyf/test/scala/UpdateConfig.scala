@@ -176,7 +176,7 @@ object UpdateConfig {
     }
     fos.close()
     fis.close()
-    println("delete file return :"+new File(fname).delete())
+    println("delete file return :" + new File(fname).delete())
     println("rename file return: "+ new File(_tmpFile).renameTo(new File(fname)) )
   }
 }
