@@ -16,9 +16,13 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.io.Source
 import gyf.test.scala.utils.RemoteSSH._
+import org.springframework.beans.factory.annotation.Value
 
 class HostInfoHandler extends AbstractHandler with ContextPathTrait{
   val log = LoggerFactory.getLogger("HostInfoHandler")
+
+  @Value("${hostpass:}")
+  val hostpass: String = null
 
   implicit val ec = new ExecutionContext { // use own defined ExcutionContext
     val threadPool = Executors.newFixedThreadPool(10);
@@ -68,9 +72,11 @@ class HostInfoHandler extends AbstractHandler with ContextPathTrait{
     val host=s(2)
     var session: Session = null
     try{
-      session = createSession(s"${user}@${host}", keyFile)
+      val host_str = s"${user}@${host}"
+      session = if(hostpass == "") createSession(host_str, keyFile)
+      else createSessionWithPass(host_str, hostpass)
 
-      val r = ssh_exec(session, "echo '====='; df -k /idmm; TERM=vt100 top -b -n 1|head -15")  // "hostname; df -k /idmm; top -n 1")
+      val r = ssh_exec(session, "echo '====='; df -k /idmm; echo; echo; TERM=vt100 top -b -n 1|head -15")  // "hostname; df -k /idmm; top -n 1")
 //      println(r._1)
       return (hostname, r._1 + r._2)
     }finally{

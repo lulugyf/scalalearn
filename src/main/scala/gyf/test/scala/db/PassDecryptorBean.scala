@@ -3,7 +3,6 @@ package gyf.test.scala.db
 import javax.annotation.Resource
 import org.springframework.context.annotation.{Bean, Configuration}
 
-@Configuration
 class PassDecryptorBean {
   @Resource
   var decryptor: PassDecryptor = null

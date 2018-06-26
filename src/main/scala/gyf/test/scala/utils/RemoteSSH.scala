@@ -14,7 +14,11 @@ object RemoteSSH {
   def main(args: Array[String]): Unit = {
 //    val session = createSession("idmm@10.113.182.96:21101", "resource/ssh_identity")
 //    val session = createSession("guanyf@127.0.0.1:8022", "resource/ssh_identity")
-    val session = createSession("idmm@10.113.182.96:21104", "conf/ssh_identity")
+//    val session = createSession("idmm@10.113.182.96:21104", "conf/ssh_identity")
+    val session = createSessionWithPass("idmm@10.113.172.188:51101", "ykRwj!b6")
+
+    val out = ssh_exec(session, "ls -l /")
+    println(out._1)
 
 //    test_shell(session)
 
@@ -28,9 +32,9 @@ object RemoteSSH {
 
     //scp_send_one_file(session, "/tmp/abc/123/jstack2.log", "d:/tmp/jstack2.log")
 
-    get_process_mon(session).foreach(p =>
-    println(p.dataSource)
-    )
+//    get_process_mon(session).foreach(p =>
+//      println(p.dataSource)
+//    )
 //    test_exec1(session)
 
     session.disconnect()
@@ -402,15 +406,27 @@ object RemoteSSH {
     val v = hostStr.split("[@:]")
     val port = if(v.length > 2) v(2).toInt else 22
     val session = jsch.getSession(v(0), v(1), port)
-    session.setUserInfo(new MyUserInfo)
+    session.setUserInfo(new MyUserInfo(""))
     session.connect()
     session
   }
 
-  class MyUserInfo extends UserInfo with UIKeyboardInteractive {
+  def createSessionWithPass(hostStr: String, pass: String): Session = {
+    val jsch = new JSch
+    val v = hostStr.split("[@:]")
+    val port = if(v.length > 2) v(2).toInt else 22
+    val session = jsch.getSession(v(0), v(1), port)
+    session.setUserInfo(new MyUserInfo(pass))
+    session.setPassword(pass)
+    session.connect()
+    session
+  }
+
+  class MyUserInfo(pass: String) extends UserInfo with UIKeyboardInteractive {
+
     override def getPassphrase: String = ""
 
-    override def getPassword: String = ""
+    override def getPassword: String = pass
 
     override def promptPassword(s: String): Boolean = false
 

@@ -38,7 +38,7 @@ object UpdateConfig {
   implicit val formats = DefaultFormats
 
   case class FileTobeUpdate(fname: String, file: File, file_pl: File, modified: Boolean, lastModified: Long)
-  case class DeployPos(id: String, host: String, user: String, path: String, authFile: String)
+  case class DeployPos(id: String, host: String, user: String, path: String, authFile: String, pass: String)
 
   var tmpdir: String = "tmp"
   var isCheck: Boolean = false
@@ -67,7 +67,10 @@ object UpdateConfig {
 
     val deploy_pos = Source.fromFile(basedir + "/deploy_pos.txt").getLines().map{ line =>
       val fs = line.split(",")
-      (fs(0), DeployPos(fs(0), fs(1), fs(2), fs(3), fs(4)) )
+      if(fs.length < 6)
+        (fs(0), DeployPos(fs(0), fs(1), fs(2), fs(3), fs(4), "") )
+      else
+        (fs(0), DeployPos(fs(0), fs(1), fs(2), fs(3), fs(4), fs(5)) )
     }.toMap
 
 
@@ -137,7 +140,8 @@ object UpdateConfig {
 //    println(tag)
     var session: Session = null
     try{
-      session = createSession(s"${pos.user}@${pos.host}", pos.authFile)
+      session = if(pos.pass == "") createSession(s"${pos.user}@${pos.host}", pos.authFile)
+            else createSessionWithPass(s"${pos.user}@${pos.host}", pos.pass)
       var r = scp_send_one_file(session, s"${pos.path}/${fname}", fsrc.getAbsolutePath)
       return s"${tag} return ${r}"
     }catch{

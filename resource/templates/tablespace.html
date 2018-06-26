@@ -1,0 +1,21 @@
+<html>
+
+<header>
+    <title>table space statics</title>
+    <link href="../resource/style.css" rel="stylesheet" type="text/css" />
+</header>
+<body>
+<h1>&sect; 表空间使用情况：</h1>
+
+<table>
+    <tr><th>表空间名称</th><th>使用率(%)</th><th>空闲空间(gb)</th></tr>
+    <%
+for(t in tsList){
+    %>
+    <tr><td>${t.tsname}</td><td>${t.pct}</td><td>${t.free}</td></tr>
+    <%
+}
+%>
+</table>
+</body>
+</html>

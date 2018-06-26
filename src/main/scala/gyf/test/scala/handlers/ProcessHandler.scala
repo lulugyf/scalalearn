@@ -53,6 +53,9 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
   @Value("${LSOF_PATH:/usr/sbin/lsof}")
   val lsof:String = null
 
+  @Value("${hostpass:}")
+  val hostpass: String = null
+
   @Resource
   var zkUtil: ZKUtil = null
 
@@ -109,17 +112,18 @@ class ProcessHandler extends AbstractHandler with ContextPathTrait{
     try{
       val host_str = s"${user}@${host}"
 //      println(s"host_str: [${host_str}]")
-      session = createSession(host_str, keyFile)
+      session = if(hostpass == "") createSession(host_str, keyFile)
+      else createSessionWithPass(host_str, hostpass)
 
       val tbls = (setBLEId(get_process_one(session, "ble"), blelist, ip) ++ get_process_one(session, "broker"))
         .filter(_.pid != "").map{ p =>
         p.toTable()
       }.mkString("\n")
-      return (hostname, "<table>"+ ProcessInfo("1").tblHeader()+tbls + "</table>")
+      return (s"${hostname}(${ip})", "<table>"+ ProcessInfo("1").tblHeader()+tbls + "</table>")
     }finally{
       if(session != null) session.disconnect()
     }
-    (hostname, "failed")
+    (s"${hostname}(${ip})", "failed")
   }
 
   def setBLEId(ps: Array[ProcessInfo], blelist: Array[BleInfo], ip: String): Array[ProcessInfo] = {
