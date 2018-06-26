@@ -1,0 +1,6 @@
+fqidmm1,idmm,10.113.181.86
+fqidmm2,idmm,10.113.181.87
+fqidmm3,idmm,10.113.181.88
+fqidmm4,idmm,10.113.181.89
+fqidmm5,idmm,10.113.181.90
+fqidmm6,idmm,10.113.181.91

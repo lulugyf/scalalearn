@@ -205,6 +205,14 @@
             <version>1.7.4</version>
         </dependency>
 
+        <dependency>
+            <groupId>sitech.sc</groupId>
+            <artifactId>pwdfile</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/jars/sc65pwd.jar</systemPath>
+        </dependency>
+
     </dependencies>
 
     <build>

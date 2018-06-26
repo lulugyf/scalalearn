@@ -1,0 +1,6 @@
+xqidmm1,idmm,10.113.182.96
+xqidmm2,idmm,10.113.182.97
+xqidmm3,idmm,10.113.182.98
+xqidmm4,idmm,10.113.182.99
+xqidmm5,idmm,10.113.182.100
+xqidmm6,idmm,10.113.182.101
