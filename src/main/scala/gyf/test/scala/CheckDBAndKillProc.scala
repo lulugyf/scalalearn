@@ -19,7 +19,7 @@ import scala.io.Source
   *   1. 3个实例分别连接, 有任何一个实例连接失败, 满足条件
   *
   *   动作:
-  *   1. 距离上次重启超过5分钟
+  *   1. 距离上次重启超过5分钟   --这个条件不好处理, 不好保存状态, 暂时没做
   *   2. 向本集群6个主机执行 /idmm/jdk1.8.0_131/bin/jps -ml|grep -e App -e BLEServ|awk '{print $1}'|xargs kill
   *   3. 等待 各自的crontab自动重启进程
   *
@@ -46,16 +46,24 @@ import scala.io.Source
 object CheckDBAndKillProc {
   def main(args: Array[String]): Unit = {
     val propfile = args(0)
+    val forcekill = args.length > 1 && args(1) == "forcekill"
     val props = new Properties()
     props.load(new FileReader(propfile))
 
-    val checkret = checkDB(props)
-
-    if(checkret == 2){
-      println(s"checkDB return ${checkret}, begin to kill all processes")
+    if(forcekill){
+      println("forcekill all processes, begin")
       killAll(props)
-    }else{
-      println(s"checkDB return ${checkret}, nothing to do.")
+      println("done!")
+    }else {
+
+      val checkret = checkDB(props)
+
+      if (checkret == 2) {
+        println(s"checkDB return ${checkret}, begin to kill all processes")
+        killAll(props)
+      } else {
+        println(s"checkDB return ${checkret}, nothing to do.")
+      }
     }
   }
 
@@ -124,5 +132,4 @@ object CheckDBAndKillProc {
     }
     (hostname, "failed")
   }
-
 }
