@@ -18,6 +18,8 @@ import scala.io.Source
 import gyf.test.scala.utils.RemoteSSH._
 import org.springframework.beans.factory.annotation.Value
 
+import scala.beans.BeanProperty
+
 class HostInfoHandler extends AbstractHandler with ContextPathTrait{
   val log = LoggerFactory.getLogger("HostInfoHandler")
 
@@ -45,11 +47,14 @@ class HostInfoHandler extends AbstractHandler with ContextPathTrait{
         <body>""")
 
     out.println(s"<h1>采集时间: ${new java.util.Date().toString}</h1><br/>")
-    out.println("<pre>")
+    out.println("<table>")
+    out.println("<tr><th>hostname</th><th>disk-path</th><th>disk-used</th><th>disk-free</th><th>cpu-used</th><th>mem-used</th>" +
+      "<th>mem-free</th><th>swap-used</th><th>swap-free</th></tr>")
+    //out.println("<pre>")
     val fis = Source.fromFile(s"${confPath}/hosts.txt")
     val keyFile = s"${confPath}/ssh_Identity"
     val lines = fis.getLines().toArray
-    println(s"---- lines len ${lines.length}")
+    //println(s"---- lines len ${lines.length}")
     fis.close()
 
     val futs = lines.map{line =>
@@ -58,12 +63,17 @@ class HostInfoHandler extends AbstractHandler with ContextPathTrait{
       }
     }
 
-    Await.result(Future.sequence(futs.toSeq), 1 minute).foreach(s => out.println(s"<h3>${s._1}</h3>\n${s._2}"))
+    Await.result(Future.sequence(futs.toSeq), 1 minute).filter(_._2 != "failed").foreach { s =>
+      //out.println(s"<h3>${s._1}</h3>\n${s._2}")
+      out.println(parse_result(s._2, s._1))
+    }
 
-    out.println("</pre>")
+    out.println("</table>")
     out.println("</body></html>" )
     request.setHandled(true)
   }
+
+  case class HostInfo(@BeanProperty hostname: String, @BeanProperty hostip:String)
 
   def one_host(host_str: String, keyFile: String, out: PrintWriter): Tuple2[String, String] = {
     val s = host_str.split(",")
@@ -83,6 +93,36 @@ class HostInfoHandler extends AbstractHandler with ContextPathTrait{
       if(session != null) session.disconnect()
     }
     (hostname, "failed")
+  }
+
+  def parse_result(s: String, hostname: String): String = {
+    val df = """(\d+) +(\d+) +(\d+) +(\d+)% +(/idmm)""".r
+    val dfr = df.findFirstMatchIn(s).get   //206293688 10549660 185258268   6% /idmm === total used avail percent
+    val disk_path = dfr.group(5)
+    val disk_used = dfr.group(4)
+    val disk_free = dfr.group(3).toLong / 1024  //mb
+
+
+    val cpu="""Cpu\(s\): .+ ([\d\.]+)%id,""".r
+    val cpur = cpu.findFirstMatchIn(s).get   // Cpu(s):  0.2%us,  0.1%sy,  0.0%ni, 99.6%id,
+    val cpu_used = 100.0 - cpur.group(1).toFloat
+
+    val mem = """Mem: +(\d+)k +total, +(\d+)k +used""".r
+    val memr = mem.findFirstMatchIn(s).get //  Mem:  264409644k total, 36303808k used
+    val mem_used = memr.group(2).toInt * 100.0 / memr.group(1).toInt
+    val mem_free = (memr.group(1).toInt - memr.group(2).toInt) / 1024  // mb
+
+    val swap = """Swap: +(\d+)k +total, +(\d+)k +used""".r
+    val swapr = swap.findFirstMatchIn(s).get //Swap: 33554428k total,        0k used
+    val swap_used = swapr.group(2).toInt * 100.0 / swapr.group(1).toInt
+    val swap_free = (swapr.group(1).toInt - swapr.group(2).toInt) / 1024  // mb
+
+    f"""<tr><td><b>${hostname}</b></td><td>${disk_path}</td><td>${disk_used} %%</td><td>${disk_free} MB</td>
+       |<td>${cpu_used}%.2f %%</td><td>${mem_used}%.2f %%</td><td>${mem_free} MB</td>
+       |<td>${swap_used}%.2f %%</td><td>${swap_free} MB</td></tr>""".stripMargin
+
+    //"disk-path disk-used(%) disk-free(mb) cpu-used(%) mem-used(%) mem-free(mb) swap-used(%) swap-free(mb)"
+
   }
 
 }
