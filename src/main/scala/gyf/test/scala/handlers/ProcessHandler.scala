@@ -45,7 +45,7 @@ import scala.io.Source
   * > 内存情况
   */
 
-class ProcessHandler extends AbstractHandler with ContextPathTrait{
+class ProcessHandler extends AbstractPathHandler{
   val log = LoggerFactory.getLogger("ProcessHandler")
 
   @Value("${JHOME}")

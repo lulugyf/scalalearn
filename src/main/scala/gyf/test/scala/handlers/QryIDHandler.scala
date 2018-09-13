@@ -16,7 +16,7 @@ import org.json4s._
 import org.json4s.native.JsonMethods._
 
 // mysql -A -h172.21.0.67 -P3307 -uidmm3 -pidmm3 idmmys
-class QryIDHandler extends AbstractHandler with ContextPathTrait{
+class QryIDHandler extends AbstractPathHandler{
   val log = LoggerFactory.getLogger("dbexcept")
 
   @Resource

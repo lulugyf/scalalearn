@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 
 import scala.beans.BeanProperty
 
-class NodeInfoHandler extends AbstractHandler with ContextPathTrait{
+class NodeInfoHandler extends AbstractPathHandler{
   val log = LoggerFactory.getLogger("dbexcept")
   val fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 

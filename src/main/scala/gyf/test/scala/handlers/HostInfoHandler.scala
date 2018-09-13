@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Value
 
 import scala.beans.BeanProperty
 
-class HostInfoHandler extends AbstractHandler with ContextPathTrait{
+class HostInfoHandler extends AbstractPathHandler{
   val log = LoggerFactory.getLogger("HostInfoHandler")
 
   @Value("${hostpass:}")

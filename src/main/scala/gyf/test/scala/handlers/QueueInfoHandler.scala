@@ -20,7 +20,7 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import collection.JavaConverters._
 
-class QueueInfoHandler extends AbstractHandler with ContextPathTrait{
+class QueueInfoHandler extends AbstractPathHandler{
   val log = LoggerFactory.getLogger("dbexcept")
   val fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 

@@ -213,6 +213,34 @@
             <systemPath>${project.basedir}/jars/sc65pwd.jar</systemPath>
         </dependency>
 
+
+
+        <!-- for http client read inoreader.com -->
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient-->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.1</version>
+        </dependency>
+        <!--<dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-android</artifactId>
+            <version>4.3.5.1</version>
+        </dependency> -->
+        <!-- https://mvnrepository.com/artifact/com.alibaba/fastjson -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.47</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/net.sourceforge.nekohtml/nekohtml -->
+        <dependency>
+            <groupId>net.sourceforge.nekohtml</groupId>
+            <artifactId>nekohtml</artifactId>
+            <version>1.9.22</version>
+        </dependency>
+
     </dependencies>
 
     <build>

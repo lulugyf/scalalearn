@@ -1,6 +1,6 @@
 package gyf.test.scala
 
-import gyf.test.scala.handlers.ContextPathTrait
+import gyf.test.scala.handlers.{AbstractPathHandler, ContextPathTrait}
 import javax.annotation.{PostConstruct, Resource}
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import org.beetl.core.GroupTemplate
@@ -22,12 +22,12 @@ class WebEntry {
   var resource_dir: String = null
 
   @Resource(name="handlers")
-  var handlers: java.util.ArrayList[AbstractHandler] = null
+  var handlers: java.util.ArrayList[AbstractPathHandler] = null
   @Resource
   val templates: GroupTemplate = null
 
-  case class Entry(pathTrait: ContextPathTrait, handler: AbstractHandler)
-  var entries: Array[Entry] = null
+//  case class Entry(pathTrait: ContextPathTrait, handler: AbstractHandler)
+//  var entries: Array[Entry] = null
 
 
   @PostConstruct
@@ -39,16 +39,17 @@ class WebEntry {
     resource_handler.setWelcomeFiles(Array[String]("index.html"))
     resource_handler.setResourceBase(resource_dir)
 
-    entries = handlers.toArray.map{ h =>
-      Entry(h.asInstanceOf[ContextPathTrait], h.asInstanceOf[AbstractHandler])
-    }
+//    entries = handlers.toArray.map{ h =>
+//      Entry(h.asInstanceOf[ContextPathTrait], h.asInstanceOf[AbstractHandler])
+//    }
 
     val contexts = new ContextHandlerCollection
-    val allHandlers = entries.map{ entry =>
-      addContext(entry.pathTrait.path, entry.handler)
+    val allHandlers = handlers.toArray.map{ h =>
+      val h1 = h.asInstanceOf[AbstractPathHandler]
+      addContext(h1.path, h.asInstanceOf[AbstractHandler])
     } ++ List[Handler](
       addContext("/resource", resource_handler),
-      addContext("/", new RootHandler(entries, templates))
+      addContext("/", new RootHandler(templates))
     )
 
     contexts.setHandlers(allHandlers.toArray)
@@ -70,7 +71,7 @@ class WebEntry {
     context
   }
 
-  class RootHandler(entries: Array[Entry], templates: GroupTemplate) extends AbstractHandler {
+  class RootHandler(templates: GroupTemplate) extends AbstractHandler {
     override def handle(s: String, request: Request, httpServletRequest: HttpServletRequest, response: HttpServletResponse): Unit = {
       response.setContentType("text/html; charset=utf-8");
       val out = response.getWriter
@@ -81,7 +82,9 @@ class WebEntry {
 //          s"""<li> <a href="${e.pathTrait.path}"> link </a> ${e.pathTrait.desc} <br /> </li>"""}.iterator.asJava)
       case class Ent(@BeanProperty path: String, @BeanProperty desc: String)
       import collection.JavaConverters._
-      t.binding("entList", entries.map{e =>Ent(e.pathTrait.path, e.pathTrait.desc)} .iterator.asJava)
+      t.binding("entList", handlers.toArray().map{h =>
+        val h1 = h.asInstanceOf[AbstractPathHandler]
+        Ent(h1.path, h1.desc)} .iterator.asJava)
       t.renderTo(out)
 
       request.setHandled(true)

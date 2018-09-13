@@ -14,7 +14,7 @@ import com.github.takezoe.scala.jdbc.jdbc._
 
 import scala.beans.BeanProperty
 
-class TableSpaceHandler extends AbstractHandler with ContextPathTrait{
+class TableSpaceHandler extends AbstractPathHandler{
   val log = LoggerFactory.getLogger("dbexcept")
 
   @Resource
